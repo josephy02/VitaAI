@@ -3,6 +3,7 @@
 // Base URLs for the two backend services
 const VIDEO_API_BASE_URL = "http://localhost:8000/api"
 const WORKOUT_API_BASE_URL = "http://localhost:8001/api"
+const DISABLE_CACHING = true;
 
 // Types based on backend models
 export interface VideoAnalysis {
@@ -291,7 +292,18 @@ export const userService = {
   },
 
   // Get user profile
+  // getProfile(): UserProfile | null {
+  //   try {
+  //     const profile = localStorage.getItem("userProfile")
+  //     return profile ? JSON.parse(profile) : null
+  //   } catch (error) {
+  //     console.error("Error getting profile:", error)
+  //     return null
+  //   }
+  // },
   getProfile(): UserProfile | null {
+    if (DISABLE_CACHING) return null;
+
     try {
       const profile = localStorage.getItem("userProfile")
       return profile ? JSON.parse(profile) : null
