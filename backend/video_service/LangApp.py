@@ -10,6 +10,7 @@ from typing import Optional, Dict, Any, List
 import uvicorn
 import sys
 from fastapi import FastAPI, HTTPException, Body, UploadFile, File, Form
+from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
@@ -73,6 +74,8 @@ app = FastAPI(
     version="1.0.0"
 )
 
+os.makedirs("public/thumbnails", exist_ok=True)
+app.mount("/thumbnails", StaticFiles(directory="public/thumbnails"), name="thumbnails")
 
 app.add_middleware(
     CORSMiddleware,
@@ -250,6 +253,58 @@ def download_social_media_video(url, output_path):
                 os.unlink(temp_json_path)
             except:
                 pass
+
+
+def extract_thumbnail(video_path, output_dir='public/thumbnails'):
+    """
+    Extract a thumbnail from a video file
+
+    Args:
+        video_path (str): Path to the video file
+        output_dir (str): Directory to save the thumbnail
+
+    Returns:
+        str: URL path to the thumbnail that can be accessed from frontend
+    """
+    # Create thumbnails directory if it doesn't exist
+    os.makedirs(output_dir, exist_ok=True)
+    # Generate a unique filename for the thumbnail
+    thumbnail_id = str(uuid.uuid4())
+    thumbnail_path = os.path.join(output_dir, f"{thumbnail_id}.jpg")
+
+    try:
+        # Use ffmpeg to extract a thumbnail at 1 second
+        cmd = [
+            "ffmpeg",
+            "-i", video_path,
+            "-ss", "00:00:01.000",  # Position at 1 second
+            "-vframes", "1",        # Extract 1 frame
+            "-q:v", "2",            # High quality
+            thumbnail_path
+        ]
+
+        # Run the command
+        process = subprocess.run(
+            cmd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            check=False
+        )
+
+        # Check if the command was successful
+        if process.returncode == 0 and os.path.exists(thumbnail_path):
+            # The URL path that frontend will use (adjust based on your static file serving setup)
+            # url_path = f"/thumbnails/{thumbnail_id}.jpg"
+            url_path = f"http://localhost:8000/thumbnails/{thumbnail_id}.jpg"
+            return url_path
+        else:
+            # Log the error for debugging
+            print(f"ffmpeg stderr: {process.stderr}")
+    except Exception as e:
+        print(f"Error extracting thumbnail: {e}")
+
+    return None
 
 
 async def generate_title_from_content(transcript=None, summary=None):
@@ -508,6 +563,13 @@ async def analyze_url(request: VideoUrlRequest):
         if not metadata or not os.path.exists(temp_video_path):
             raise HTTPException(status_code=400, detail="Failed to download the video")
 
+         # Extract thumbnail before processing video
+        thumbnail_url = extract_thumbnail(temp_video_path)
+        if thumbnail_url:
+            # Add thumbnail URL to metadata
+            if metadata is None:
+                metadata = {}
+            metadata["thumbnail"] = thumbnail_url
         results = await process_video(temp_video_path, request.summary_prompt)
 
         # generate a title if one isn't there
@@ -554,6 +616,9 @@ async def analyze_upload(
         with open(temp_video_path, "wb") as buffer:
             shutil.copyfileobj(file.file, buffer)
 
+        # Extract thumbnail
+        thumbnail_url = extract_thumbnail(temp_video_path)
+
         results = await process_video(temp_video_path, summary_prompt)
         with VideoFileClip(temp_video_path) as video:
             duration = video.duration
@@ -564,17 +629,23 @@ async def analyze_upload(
         )
         tags = await extract_tags(results["transcript"] + " " + results["summary"])
 
+        # Create metadata with thumbnail
+        metadata = {
+            "filename": file.filename,
+            "content_type": file.content_type,
+            "size": os.path.getsize(temp_video_path)
+        }
+
+        if thumbnail_url:
+            metadata["thumbnail"] = thumbnail_url
+
         return {
             "title": title if title else file.filename,  # use generated title, fallback to filename
             "duration_seconds": duration,
             "transcript": results["transcript"],
             "summary": results["summary"],
             "tags": tags,
-            "metadata": {
-                "filename": file.filename,
-                "content_type": file.content_type,
-                "size": os.path.getsize(temp_video_path)
-            }
+            "metadata": metadata
         }
 
     except Exception as e:
