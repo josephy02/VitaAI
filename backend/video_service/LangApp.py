@@ -94,25 +94,6 @@ title_prompt = ChatPromptTemplate.from_template(
 )
 title_generator_chain = title_prompt | llm_gpt35 | StrOutputParser()
 
-# summarize_chain = LLMChain(
-#     llm=llm_gpt4,
-#     prompt=ChatPromptTemplate.from_template(
-#         "You are an expert video summarizer. You receive a video transcript to summarize and turn into a list.\n\n"
-#         "Transcript content: {transcript}\n\n"
-#         "Summarize according to this request: {user_prompt}"
-#     ),
-#     output_parser=StrOutputParser(),
-# )
-
-# tag_extraction_chain = LLMChain(
-#     llm=llm_gpt35,
-#     prompt=ChatPromptTemplate.from_template(
-#         "Extract relevant tags from the following fitness content. "
-#         "Return only a comma-separated list of tags. Focus on workout types, muscle groups, "
-#         "and fitness concepts mentioned.\n\nContent: {content}"
-#     ),
-#     output_parser=StrOutputParser(),
-# )
 
 summarize_chain = ChatPromptTemplate.from_template(
     "You are an expert video summarizer. You receive a video transcript to summarize and turn into a list.\n\n"
