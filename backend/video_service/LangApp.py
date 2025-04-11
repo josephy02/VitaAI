@@ -25,6 +25,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 # from langchain_community.document_loaders.parsers.audio import OpenAIWhisperParser # USE THISSSSSS
 # from langchain_community.document_loaders import AssemblyAIAudioTranscriptLoader
 from openai import OpenAI
+from db import collection  # make sure this import is at the top
+
 
 
 load_dotenv()
@@ -724,3 +726,13 @@ if __name__ == "__main__":
     # when running from the backend directory, we need to use the relative path
     print(f"Starting server from {os.path.abspath(__file__)}")
     uvicorn.run("LangApp:app", host="127.0.0.1", port=8000, reload=True)
+
+
+@app.get("/api/test-mongo")
+async def test_mongo_connection():
+    try:
+        # Run a simple command to check the connection
+        await collection.database.command("ping")
+        return {"success": True, "message": "MongoDB connection successful"}
+    except Exception as e:
+        return {"success": False, "error": str(e)}
