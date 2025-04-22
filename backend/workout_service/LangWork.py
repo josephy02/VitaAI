@@ -20,7 +20,11 @@ from langchain_core.output_parsers import StrOutputParser
 load_dotenv()
 
 # constant variables
-DATA_FILE = 'saved_analyses.json'
+import os
+# Use absolute path to a shared location
+DATA_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), 'data', 'saved_analyses.json')
+# Make sure the directory exists
+os.makedirs(os.path.dirname(DATA_FILE), exist_ok=True)
 
 # initialize LLM models with different temperature settings
 llm_gpt4 = ChatOpenAI(model="gpt-4o", api_key=os.getenv("OPENAI_API_KEY"))

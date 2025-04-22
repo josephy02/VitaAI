@@ -1,1 +1,1 @@
-self.__REACT_LOADABLE_MANIFEST="{}"
+self.__REACT_LOADABLE_MANIFEST="{\"services/websocket.ts -> ./api\":{\"id\":\"services/websocket.ts -> ./api\",\"files\":[]}}"

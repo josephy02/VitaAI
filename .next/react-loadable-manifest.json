@@ -1,1 +1,6 @@
-{}
+{
+  "services/websocket.ts -> ./api": {
+    "id": "services/websocket.ts -> ./api",
+    "files": []
+  }
+}
