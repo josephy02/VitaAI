@@ -25,7 +25,7 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 # from langchain_community.document_loaders.parsers.audio import OpenAIWhisperParser # USE THISSSSSS
 # from langchain_community.document_loaders import AssemblyAIAudioTranscriptLoader
 from openai import OpenAI
-from db import collection  # make sure this import is at the top
+# from db import collection  # make sure this import is at the top
 
 
 
